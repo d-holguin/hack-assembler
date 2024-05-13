@@ -1,6 +1,6 @@
 # Hack Assembler
 
-This is an assembler for the Hack computer, which I've written for the [Nand2Tetris course](http://nand2tetris.org/) It translates assembly code written for the Hack computer into machine code that the Hack hardware platform can execute.
+This is an assembler for the Hack computer, which I've written for the [Nand2Tetris course](http://nand2tetris.org/). It translates assembly code written for the Hack computer into machine code that the Hack hardware platform can execute.
 
 ## Help Output
 
