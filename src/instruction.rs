@@ -44,7 +44,7 @@ impl CInstruction {
     pub fn to_binary(&self) -> String {
         let a_bit = if self.comp.clone().uses_m() { "1" } else { "0" };
         let dest = self.dest.clone() as u16;
-        let comp = self.comp.clone().as_binary();
+        let comp = self.comp.clone().to_binary();
         let jump = self.jump.clone() as u16;
         format!("111{}{:06b}{:03b}{:03b}", a_bit, comp, dest, jump)
     }
@@ -171,7 +171,7 @@ pub enum Comp {
 }
 
 impl Comp {
-    pub fn as_binary(self) -> u16 {
+    pub fn to_binary(self) -> u16 {
         self as u16 & 0b0111111 // Strip the 'a-bit', return only the 6-bit computation code
     }
     pub fn uses_m(self) -> bool {

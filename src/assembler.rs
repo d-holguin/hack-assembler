@@ -1,8 +1,6 @@
-use std::error::Error;
 use std::io::{BufRead, Seek, Write};
-use std::result::Result;
 
-use crate::{instruction::Instruction, AsmError, Config, SymbolTable};
+use crate::{instruction::Instruction, AsmError, Config, Result, SymbolTable};
 
 pub struct Assembler<R: BufRead, W: Write> {
     config: Config,
@@ -27,7 +25,7 @@ impl<R: BufRead + Seek, W: Write> Assembler<R, W> {
         }
     }
 
-    pub fn assemble(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn assemble(&mut self) -> Result<()> {
         self.build_symbol_table()?;
         self.reader.seek(std::io::SeekFrom::Start(0))?;
         self.line_number = 1;
@@ -82,7 +80,7 @@ impl<R: BufRead + Seek, W: Write> Assembler<R, W> {
 
         Ok(())
     }
-    fn handle_instruction(&mut self, instruction: Instruction) -> Result<(), Box<dyn Error>> {
+    fn handle_instruction(&mut self, instruction: Instruction) -> Result<()> {
         match instruction {
             Instruction::A(a_instruction) => {
                 let address = a_instruction.value();
@@ -102,7 +100,7 @@ impl<R: BufRead + Seek, W: Write> Assembler<R, W> {
         Ok(())
     }
 
-    fn build_symbol_table(&mut self) -> Result<(), Box<dyn Error>> {
+    fn build_symbol_table(&mut self) -> Result<()> {
         let mut reader_lines = self.reader.by_ref().lines();
 
         while let Some(line_result) = reader_lines.next() {
@@ -138,7 +136,7 @@ impl<R: BufRead + Seek, W: Write> Assembler<R, W> {
     }
 }
 
-fn sanitize_line(line: &str, line_number: usize) -> Result<Option<String>, AsmError> {
+fn sanitize_line(line: &str, line_number: usize) -> std::result::Result<Option<String>, AsmError> {
     let trimmed = line.trim();
     if trimmed.is_empty() {
         return Ok(None);

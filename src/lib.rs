@@ -6,7 +6,6 @@ mod symbol_table;
 use clap::{arg, Command};
 
 use std::{
-    error::Error,
     fs::File,
     io::{BufReader, BufWriter},
     path::{Path, PathBuf},
@@ -15,12 +14,18 @@ use std::{
 pub use error::AsmError;
 pub use symbol_table::SymbolTable;
 
+
+pub type Error = Box<dyn std::error::Error>;
+pub type Result<T> = std::result::Result<T, Error>;
+
+
+
 pub struct Config {
     pub input_file: PathBuf,
     pub output_file: PathBuf,
 }
 
-pub fn match_args() -> Result<Config, Box<dyn Error>> {
+pub fn match_args() -> Result<Config> {
     let matches = Command::new("Hack Assembler")
         .version("1.0")
         .author("d-holguin")
@@ -49,7 +54,7 @@ pub fn match_args() -> Result<Config, Box<dyn Error>> {
     })
 }
 
-pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
+pub fn run(config: Config) -> Result<()> {
     let reader = BufReader::new(File::open(&config.input_file)?);
     let writer = BufWriter::new(File::create(&config.output_file)?);
     let symbol_table = SymbolTable::new();
