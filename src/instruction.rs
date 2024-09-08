@@ -25,10 +25,10 @@ impl Instruction {
 
             if let Ok(num) = symbol.parse::<u16>() {
                 // Directly addressable number
-                return Ok(Instruction::A(AInstruction::new(num)));
+                Ok(Instruction::A(AInstruction::new(num)))
             } else {
                 // Variable
-                return Ok(Instruction::Variable(symbol.to_string()));
+                Ok(Instruction::Variable(symbol.to_string()))
             }
         } else if instruction.starts_with('(') && instruction.ends_with(')') {
             let label = instruction.trim_matches(|c: char| c == '(' || c == ')');

@@ -11,9 +11,9 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use crate::error::AssemblyError;
 pub use error::AsmError;
 pub use symbol_table::SymbolTable;
-
 
 pub type Error = Box<dyn std::error::Error>;
 pub type Result<T> = std::result::Result<T, Error>;
@@ -54,12 +54,19 @@ pub fn match_args() -> Result<Config> {
     })
 }
 
-pub fn run(config: Config) -> Result<()> {
+
+
+pub fn run(config: Config) -> std::result::Result<(), AssemblyError> {
     let reader = BufReader::new(File::open(&config.input_file)?);
-    let writer = BufWriter::new(File::create(&config.output_file)?);
+    let output_file_path = &config.output_file.clone();
+    let writer = BufWriter::new(File::create(output_file_path)?);
     let symbol_table = SymbolTable::new();
 
     let mut assembler = assembler::Assembler::new(reader, writer, config, symbol_table);
-    assembler.assemble()?;
+
+    if let Err(e) = assembler.assemble() {
+        std::fs::remove_file(&output_file_path).map_err(|err| AssemblyError::Other(Box::new(err)))?;
+        return Err(e);
+    }
     Ok(())
 }
