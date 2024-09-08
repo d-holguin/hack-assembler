@@ -6,21 +6,25 @@ mod symbol_table;
 use clap::{arg, Command};
 
 use std::{
-    error::Error,
     fs::File,
     io::{BufReader, BufWriter},
-    path::{Path, PathBuf},
+    path::PathBuf,
 };
 
+use crate::error::AssemblyError;
 pub use error::AsmError;
 pub use symbol_table::SymbolTable;
+
+pub type Error = Box<dyn std::error::Error>;
+pub type Result<T> = std::result::Result<T, Error>;
+
 
 pub struct Config {
     pub input_file: PathBuf,
     pub output_file: PathBuf,
 }
 
-pub fn match_args() -> Result<Config, Box<dyn Error>> {
+pub fn match_args() -> Result<Config> {
     let matches = Command::new("Hack Assembler")
         .version("1.0")
         .author("d-holguin")
@@ -33,7 +37,7 @@ pub fn match_args() -> Result<Config, Box<dyn Error>> {
         .get_one::<String>("file")
         .ok_or("No input file provided")?;
 
-    let input_file = Path::new(&input_file);
+    let input_file = PathBuf::from(&input_file);
 
     if input_file.extension().unwrap_or_default() != "asm" {
         return Err(Box::new(std::io::Error::new(
@@ -44,17 +48,23 @@ pub fn match_args() -> Result<Config, Box<dyn Error>> {
     let output_file = input_file.with_extension("hack");
 
     Ok(Config {
-        input_file: PathBuf::from(input_file),
-        output_file: PathBuf::from(output_file),
+        input_file,
+        output_file,
     })
 }
 
-pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
+
+pub fn run(config: Config) -> std::result::Result<(), AssemblyError> {
     let reader = BufReader::new(File::open(&config.input_file)?);
-    let writer = BufWriter::new(File::create(&config.output_file)?);
-    let symbol_table = SymbolTable::new();
+    let output_file_path = &config.output_file.clone();
+    let writer = BufWriter::new(File::create(output_file_path)?);
+    let symbol_table = SymbolTable::default();
 
     let mut assembler = assembler::Assembler::new(reader, writer, config, symbol_table);
-    assembler.assemble()?;
+
+    if let Err(e) = assembler.assemble() {
+        std::fs::remove_file(output_file_path).map_err(|err| AssemblyError::Other(Box::new(err)))?;
+        return Err(e);
+    }
     Ok(())
 }

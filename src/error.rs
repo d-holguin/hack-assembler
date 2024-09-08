@@ -1,4 +1,6 @@
-#[derive(Debug)]
+use std::fmt;
+
+#[derive(Debug, Clone)]
 pub enum AsmError {
     InvalidInstruction { line: usize, instruction: String },
     SyntaxError { line: usize, message: String },
@@ -6,8 +8,8 @@ pub enum AsmError {
 
 impl std::error::Error for AsmError {}
 
-impl std::fmt::Display for AsmError {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl fmt::Display for AsmError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             AsmError::InvalidInstruction { line, instruction } => {
                 write!(f, "Invalid instruction on line {line}: {instruction}")
@@ -18,6 +20,60 @@ impl std::fmt::Display for AsmError {
         }
     }
 }
+
+impl Clone for AssemblyError {
+    fn clone(&self) -> Self {
+        match self {
+            AssemblyError::AsmErrors(errors) => AssemblyError::AsmErrors(errors.clone()),
+            AssemblyError::Other(_) => AssemblyError::Other(Box::new(std::io::Error::new(std::io::ErrorKind::Other, "Cannot clone Box<dyn Error>"))),
+        }
+    }
+}
+
+
+#[derive(Debug)]
+pub enum AssemblyError {
+    AsmErrors(Vec<AsmError>),
+    Other(Box<dyn std::error::Error>),
+}
+
+impl From<Box<dyn std::error::Error>> for AssemblyError {
+    fn from(error: Box<dyn std::error::Error>) -> Self {
+        AssemblyError::Other(error)
+    }
+}
+
+impl From<std::io::Error> for AssemblyError {
+    fn from(error: std::io::Error) -> Self {
+        AssemblyError::Other(Box::new(error))
+    }
+}
+
+impl fmt::Display for AssemblyError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            AssemblyError::AsmErrors(errors) => {
+                writeln!(f, "Assembly encountered the following errors:")?;
+                for error in errors {
+                    writeln!(f, "  - {}", error)?;
+                }
+                Ok(())
+            }
+            AssemblyError::Other(err) => write!(f, "{}", err),
+        }
+    }
+}
+
+
+impl std::error::Error for AssemblyError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            AssemblyError::Other(err) => Some(err.as_ref()),
+            _ => None,
+        }
+    }
+}
+
 
 #[cfg(test)]
 mod test {
