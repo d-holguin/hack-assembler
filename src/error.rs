@@ -53,7 +53,7 @@ impl fmt::Display for AssemblyError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             AssemblyError::AsmErrors(errors) => {
-                write!(f, "Assembly encountered the following errors:\n")?;
+                writeln!(f, "Assembly encountered the following errors:")?;
                 for error in errors {
                     writeln!(f, "  - {}", error)?;
                 }

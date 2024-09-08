@@ -1,3 +1,4 @@
+use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 
 pub struct SymbolTable {
@@ -14,14 +15,14 @@ impl SymbolTable {
             next_variable_address: 16,
         }
     }
-    pub fn add_variable(&mut self, symbol: String) -> u16 {
-        if !self.table.contains_key(&symbol) {
+    pub fn add_variable(&mut self, symbol: String) -> crate::Result<u16> {
+        if let Entry::Vacant(_) = self.table.entry(symbol.clone()) {
             let address = self.next_variable_address;
             self.table.insert(symbol, address);
             self.next_variable_address += 1;
-            address
+            Ok(address)
         } else {
-            *self.table.get(&symbol).unwrap()
+            Ok(*self.table.get(&symbol).ok_or_else(|| format!("Symbol {} not found", symbol))?)
         }
     }
 
@@ -50,5 +51,12 @@ impl SymbolTable {
         table.insert("KBD".to_string(), 24576);
 
         table
+    }
+}
+
+
+impl Default for SymbolTable {
+    fn default() -> Self {
+        SymbolTable::new()
     }
 }

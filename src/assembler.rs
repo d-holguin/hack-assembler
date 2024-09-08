@@ -30,10 +30,10 @@ impl<R: BufRead + Seek, W: Write> Assembler<R, W> {
         self.build_symbol_table()?;
         self.reader.seek(std::io::SeekFrom::Start(0))?;
         self.line_number = 1;
-        let mut reader_lines = self.reader.by_ref().lines();
+        let reader_lines = self.reader.by_ref().lines();
 
         let mut instructions: Vec<Instruction> = Vec::new();
-        while let Some(line_result) = reader_lines.next() {
+        for line_result in  reader_lines {
             let line = match line_result {
                 Ok(line) => line,
                 Err(e) => {
@@ -86,7 +86,7 @@ impl<R: BufRead + Seek, W: Write> Assembler<R, W> {
                 writeln!(self.writer, "{}", binary)?;
             }
             Instruction::Variable(variable_name) => {
-                let address = self.symbol_table.add_variable(variable_name.clone());
+                let address = self.symbol_table.add_variable(variable_name.clone())?;
                 let binary = format!("{:016b}", address);
                 writeln!(self.writer, "{}", binary)?;
             }
@@ -96,9 +96,9 @@ impl<R: BufRead + Seek, W: Write> Assembler<R, W> {
     }
 
     fn build_symbol_table(&mut self) -> Result<()> {
-        let mut reader_lines = self.reader.by_ref().lines();
+        let reader_lines = self.reader.by_ref().lines();
 
-        while let Some(line_result) = reader_lines.next() {
+        for line_result in reader_lines {
             self.line_number += 1;
             let line = line_result?;
 
