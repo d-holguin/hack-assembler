@@ -75,3 +75,16 @@ cargo build --release
 `target\debug\hack_assembler.exe -f assets/Pong.asm`
 Successfully assembled the file: assets/Pong.hack
 ```
+
+
+
+### Output with Errors
+
+```shell
+# error.asm
+Error running the Hack Assembler: Assembly encountered the following errors:
+  - Invalid instruction on line 2: ^error^(START)
+  - Invalid instruction on line 9: ^error^  @i
+  - Invalid instruction on line 12: D(invalid)1
+  - Invalid instruction on line 22: 0:JUMP
+```
